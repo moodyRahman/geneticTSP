@@ -1,0 +1,12 @@
+You can put your best paths here, or in any other CSV-type file.
+Netlogo will read your file looking for the particular dataset name on a line by itself (like A4 or A11), followed by a line containing the path with point 0
+at the beginning.  For instance, the following are the optimal paths for A4 and A8.
+
+A4
+0,2,1,3
+
+A8
+0,1,2,3,4,5,6,7
+
+A9
+0,1,2,3,4,5,6,7,8
