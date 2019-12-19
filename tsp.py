@@ -1,6 +1,24 @@
 import random
 import math
 
+
+# Made by Moududur Rahman
+# Shot One at a Genetic TSP Solver
+# change the desired board via the BOARD variable
+# all availible boards inside the points.csv
+#
+# ===============
+# points.csv
+# ===============
+# boardname, bestpath
+# x0,x1,x2,x3,x4,x5
+# y0,y1,y2,y3,y4,y5
+# sol0,sol1,sol2,sol3,sol4,sol5
+#
+
+
+BOARD = "A8"
+
 class Point(object):
     """docstring for Point."""
 
@@ -13,11 +31,11 @@ class Point(object):
         return "( {} , {} )".format(self.x, self.y)
 
 
-class PointSet(object):
+class GeneticTSP(object):
     """Descripbes one input"""
 
     def __init__(self, input):
-        super(PointSet, self).__init__()
+        super(GeneticTSP, self).__init__()
         lines = input.split("\n")
         self.points = []
         self.data = lines[0].split(",")
@@ -25,15 +43,26 @@ class PointSet(object):
         self.ycoors = lines[2].split(",")
         self.sol = lines[3].split(",")
         self.currgen = []
+        self.allfitness=[]
+        self.population = 100
+        self.orderings = {}
+
         for n in range(len(self.xcoors)):
+            self.orderings["" + self.xcoors[n] +", "+ self.ycoors[n]] = n
             self.points.append(Point(self.xcoors[n], self.ycoors[n]))
 
+
+    # intializes this generation with random solutions
     def gen1(self):
-        for x in range(5):
+        for x in range(self.population):
             self.currgen.append(self.genshuffle(self.points))
 
+
+
+    # updates the internal allfitness array
+    # allfitness[n] corresponds with currgen[n]
     def calcfitness(self):
-        self.allfitness = []
+        self.allfitness.clear()
         for route in self.currgen:
             fitness = 0
             for point in range(len(route) - 1):
@@ -41,66 +70,105 @@ class PointSet(object):
                 dy2 = (route[point].y - route[point + 1].y)**2
                 dist = math.sqrt(dx2 + dy2)
                 fitness += dist
+            dx2 = (route[-1].x - route[0].x)**2
+            dy2 = (route[-1].y - route[0].y)**2
+            dist = math.sqrt(dx2 + dy2)
+            fitness += dist
             self.allfitness.append(fitness)
-        # print(self.allfitness)
 
     def makechildren(self):
+
+        # identify the most fit members of the generation
+        # store them in fittest1 and fittest2
         smallestdist = min(self.allfitness)
         fittestindex = self.allfitness.index(smallestdist)
         fittest1 = self.currgen.pop(fittestindex)
         self.allfitness.pop(fittestindex)
+
 
         smallestdist = min(self.allfitness)
         fittestindex = self.allfitness.index(smallestdist)
         fittest2 = self.currgen.pop(fittestindex)
         self.allfitness.pop(fittestindex)
 
-        # print(fittest1, fittest2)
+        # append new childs to newgen, will be copied into and replace currgen
+        newgen = []
 
+        for m in range(self.population):
+            # print("TIME TO MAKE SOME BABIES")
+            fittest1c = []
+            fittest2c = []
 
-        trindex = random.sample(range(len(fittest1)), 2)
-        trindex.sort()
-        # print(fittest1[trindex[0]:trindex[1]])
-        child = []
-        for x in range(len(fittest1)):
-            child.append(0)
-        child[trindex[0]:trindex[1]] = fittest1[trindex[0]:trindex[1]]
-        for n, element in enumerate(fittest2):
-            for c in child:
-                if c != 0:
-                    if element.x == c.x and element.y == c.y:
-                        fittest2[n] = 0
-        # for n, x in enumerate(child):
-        #     if x == 0:
-        #         # child[n] = fittest2[n]
-        #         for y in child:
-        #
+            # copies over the fittest1 and fittest2 so that they remain constant between children
+            for n in range(len(fittest1)):
+                fittest1c.append(Point(fittest1[n].x, fittest1[n].y))
 
-        print(child)
-        print(fittest2)
+            for n in range(len(fittest2)):
+                fittest2c.append(Point(fittest2[n].x, fittest2[n].y))
 
-        ccounter = trindex[1]
-        fcounter = trindex[1]
-        while 0 in child:
-            if child[ccounter] == 0:
-                if fittest2[fcounter] != 0:
-                    child[ccounter] = fittest2[fcounter]
-                    ccounter += 1
-                    fcounter += 1
-                    if fcounter == len(fittest2):
-                        fcounter = 0
-                    if ccounter == len(fittest2):
-                        ccounter = 0
-                else:
-                    fcounter += 1
-                    if fcounter == len(fittest2):
-                        fcounter = 0
-            else:
-                ccounter += 1
-                if ccounter == len(fittest2):
+            # generates 2 random numbers that fall within the range of fittest1c
+            # take that subset of fittest1c, and copy it over to child
+            trindex = random.sample(range(len(fittest1c)), 2)
+            trindex.sort()
+            child = []
+            for x in range(len(fittest1c)):
+                child.append(0)            # intializes child with zero's
+                                           # zero's will be used as a placeholder for to be filled or empty slots
+            child[trindex[0]:trindex[1]] = fittest1c[trindex[0]:trindex[1]]      # copying to child
+
+            # all matching elements between child and fittest2 are removed from fittest2c
+            # in preparation for the remaining crossover
+            for n, element in enumerate(fittest2c):
+                for c in child:
+                    if c != 0:
+                        if element.x == c.x and element.y == c.y:
+                            fittest2c[n] = 0
+            # print("child recieving a splice of: ", fittest1c[trindex[0]:trindex[1]])
+            # print("child is now: ", child)
+            # for n, x in enumerate(child):
+            #     if x == 0:
+            #         # child[n] = fittest2c[n]
+            #         for y in child:
+            #
+
+            # start from where the fittest1c splicing finished
+            # copy the remaining elements of fittest2c (non-zero) into child
+            ccounter = trindex[1]
+            fcounter = trindex[1]
+            # print("crossover from: ", fittest2c)
+            while 0 in child:
+                if fcounter == len(fittest2c):
+                    fcounter = 0
+                if ccounter == len(fittest2c):
                     ccounter = 0
 
-        print(child)
+                if child[ccounter] == 0:
+                    if fittest2c[fcounter] != 0:
+                        child[ccounter] = fittest2c[fcounter]
+                        fittest2c[fcounter] = 0
+                        ccounter += 1
+                        fcounter += 1
+                    else:
+                        fcounter += 1
+                else:
+                    ccounter += 1
+            # print("final child: ", child)
+
+
+            # mutation time baby
+            # same point subset method as the slicing operation
+            trindex = random.sample(range(len(child)), 2)
+            if random.randint(0, 100) < 7:
+                c = child[trindex[0]]
+                child[trindex[0]] = child[trindex[1]]
+                child[trindex[1]] = c
+
+            # proper child made with information from both parents
+            # append to newgen
+            newgen.append(child)
+
+        # copy over the newgen into the currgen
+        self.currgen = newgen
 
     def genshuffle(self, array):
         out = []
@@ -109,16 +177,50 @@ class PointSet(object):
             out.append(x)
         return out
 
+
+#
+# csv processing stuff
+#
 allin = open("points.csv", "r").read().split("\n\n")
 allboards = {}
-for x in allin[:-1]:
+for x in allin:
     allboards[x.split("\n")[0].split(",")[0]] = x
 
 for x in allboards.keys():
-    allboards[x] = PointSet(allboards[x])
+    allboards[x] = GeneticTSP(allboards[x])
 
-# print(allboards["A12"].points)
-currboard = allboards["A8"]
+currboard = allboards[BOARD]
 currboard.gen1()
-currboard.calcfitness()
-currboard.makechildren()
+
+
+#
+#the loop to handle... it's rather self-explanatory
+#
+
+for gen in range(1000):
+    currboard.calcfitness()
+    currboard.makechildren()
+
+
+
+print("THE FITTEST PATH GENERATED")
+print(currboard.currgen[currboard.allfitness.index(min(currboard.allfitness))])
+
+print()
+print("ditance: ", min(currboard.allfitness))
+out = []
+for point in currboard.currgen[currboard.allfitness.index(min(currboard.allfitness))]:
+    p = "" + str(point.x) + ", " + str(point.y)
+    out.append(str(currboard.orderings[p]))
+
+nout = []
+nout.extend(out[out.index("0"):])
+nout.extend(out[:out.index("0")])
+
+nouts = ""
+for x in nout:
+    nouts = nouts + x + ","
+
+print()
+print("formatted path")
+print(nouts)
