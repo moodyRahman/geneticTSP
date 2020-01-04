@@ -209,7 +209,7 @@ print("THE FITTEST PATH GENERATED")
 print(currboard.currgen[currboard.allfitness.index(min(currboard.allfitness))])
 
 print()
-print("ditance: ", min(currboard.allfitness))
+print("distance: ", min(currboard.allfitness))
 out = []
 for point in currboard.currgen[currboard.allfitness.index(min(currboard.allfitness))]:
     p = "" + str(point.x) + ", " + str(point.y)
