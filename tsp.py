@@ -18,6 +18,8 @@ import math
 
 
 BOARD = "A8"
+POPULATION = 100
+GENERATIONS = 100
 
 class Point(object):
     """docstring for Point."""
@@ -32,7 +34,7 @@ class Point(object):
 
 
 class GeneticTSP(object):
-    """Descripbes one input"""
+    """Describes one input"""
 
     def __init__(self, input):
         super(GeneticTSP, self).__init__()
@@ -44,7 +46,7 @@ class GeneticTSP(object):
         self.sol = lines[3].split(",")
         self.currgen = []
         self.allfitness=[]
-        self.population = 100
+        self.population = POPULATION
         self.orderings = {}
 
         for n in range(len(self.xcoors)):
@@ -197,7 +199,7 @@ currboard.gen1()
 #the loop to handle... it's rather self-explanatory
 #
 
-for gen in range(1000):
+for gen in range(GENERATIONS):
     currboard.calcfitness()
     currboard.makechildren()
 
